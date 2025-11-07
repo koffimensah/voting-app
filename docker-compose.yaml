@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  vote:
+    build: ./vote
+    container_name: vote
+    ports:
+      - "8080:80"        # Vote app → http://localhost:8080
+    environment:
+      - REDIS_HOST=redis
+      - WORK_API=http://work:80
+    depends_on:
+      - redis
+      - work
+    networks:
+      - vote-net
+
+  result:
+    build: ./result
+    container_name: result
+    ports:
+      - "8081:80"        # Result app → http://localhost:8081
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - vote-net
+
+  work:
+    build: ./work
+    container_name: work
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
+    networks:
+      - vote-net
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - vote-net
+
+  db:
+    image: postgres:13-alpine
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: votes
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - vote-net
+
+volumes:
+  db_data:
+
+networks:
+  vote-net:
