@@ -22,7 +22,7 @@ services:
       - backend
 
   vote:
-    image: dockersamples/examplevotingapp_vote
+    image: koffimensah/voting-vote:latest
     ports:
       - 2025:80
     networks:
@@ -31,14 +31,14 @@ services:
       # replicas: 2
 
   result:
-    image: dockersamples/examplevotingapp_result
+    image: koffimensah/voting-result:latest
     ports:
       - 8081:80
     networks:
       - backend
 
   worker:
-    image: dockersamples/examplevotingapp_worker
+    image: koffimensah/voting-worker:latest
     networks:
       - frontend
       - backend

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   vote:
-    build: ./vote
+    image: koffimensah/voting-vote:latest
     container_name: vote
     ports:
       - "8080:80"        # Vote app → http://localhost:8080
@@ -16,7 +16,7 @@ services:
       - vote-net
 
   result:
-    build: ./result
+    image: koffimensah/voting-result:latest
     container_name: result
     ports:
       - "8081:80"        # Result app → http://localhost:8081
@@ -28,7 +28,7 @@ services:
       - vote-net
 
   work:
-    build: ./work
+    image: koffimensah/voting-worker:latest
     container_name: work
     environment:
       - DB_HOST=db
