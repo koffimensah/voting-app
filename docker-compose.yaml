@@ -16,12 +16,14 @@ services:
       - vote-net
 
   result:
-    image: koffimensah/voting-result:latest
+    image: koffimensah/voting-result:latest  # Switch back to image
+    # build: ./result              # Comment out build
     container_name: result
     ports:
-      - "8081:80"        # Result app → http://localhost:8081
+      - "8081:80"
     environment:
       - REDIS_HOST=redis
+      - PORT=80
     depends_on:
       - redis
     networks:
