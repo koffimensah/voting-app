@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: agbor
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -55,7 +55,7 @@ jobs:
   dockerhub-login:
     name: Login to Docker Hub
     needs: build
-    runs-on: agbor
+    runs-on: self-hosted
 
     steps:
       - name: Install Docker CLI (if not available)
