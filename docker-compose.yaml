@@ -1,11 +1,12 @@
-# version: '3.8'
+version: '3.8'
 
 services:
   vote:
-    image: koffimensah/voting-vote:latest
+   # build: ./vote               # path to the Dockerfile for vote
+    image: koffimensah/voting-vote:latest   # optional, names the local image
     container_name: vote
     ports:
-      - "8080:80"        # Vote app → http://localhost:8080
+      - "8080:80"
     environment:
       - REDIS_HOST=redis
       - WORK_API=http://work:80
@@ -16,8 +17,8 @@ services:
       - vote-net
 
   result:
-    image: koffimensah/voting-result:latest  # Switch back to image
-    # build: ./result              # Comment out build
+   # build: ./result             # build locally from ./result folder
+    image: koffimensah/voting-result:latest
     container_name: result
     ports:
       - "8081:80"
@@ -30,6 +31,7 @@ services:
       - vote-net
 
   work:
+   # build: ./worker             # build locally from ./worker folder
     image: koffimensah/voting-worker:latest
     container_name: work
     environment:
