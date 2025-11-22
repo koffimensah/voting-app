@@ -44,3 +44,14 @@ jobs:
         run: |
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
           echo "✅ Successfully logged into Docker Hub!"
+      
+      - name: tag and push in Docker hub
+        run: 
+            docker tag koffimensah/voting-vote:latest koffimensah/voting-vote:latest:v1.0.0
+            docker tag koffimensah/voting-result:latest koffimensah/voting-result:latest:v1.0.0
+            docker tag koffimensah/voting-worker:latest koffimensah/voting-worker:latest:v1.0.0
+
+            docker push koffimensah/voting-vote:latest:v1.0.0
+            docker push koffimensah/voting-result:latest:v1.0.0
+            docker push koffimensah/voting-worker:latest:v1.0.0
+          
