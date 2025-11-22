@@ -6,17 +6,15 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-push-deploy:
     runs-on: self-hosted
-    # defaults:
-    #   run:
-    #     working-directory: /home/ubuntu/voting-app  # absolute path, not ~
-
 
     steps:
+      # 1️⃣ Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2️⃣ Ensure Docker daemon is running
       - name: Ensure Docker daemon is running
         run: |
           if ! docker info &> /dev/null; then
@@ -24,19 +22,10 @@ jobs:
             sudo nohup dockerd --host=unix:///var/run/docker.sock --containerd=/run/containerd/containerd.sock > ~/dockerd.log 2>&1 &
             sleep 10
           fi
-          sudo chmod 777 /var/run/docker.sock 
+          sudo chmod 777 /var/run/docker.sock
           docker info
 
-      - name: Deploy voting-app stack
-        run: |
-          docker compose up -d 
-
-  dockerhub-login:
-    name: Login to Docker Hub
-    needs: deploy
-    runs-on: self-hosted
-
-    steps:
+      # 3️⃣ Login to Docker Hub
       - name: Login to Docker Hub
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -44,14 +33,40 @@ jobs:
         run: |
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
           echo "✅ Successfully logged into Docker Hub!"
-      
-      - name: tag and push in Docker hub
-        run: 
-            docker tag voting-vote:latest koffimensah/voting-vote:latest:v1.0.0
-            docker tag voting-result:latest koffimensah/voting-result:latest:v1.0.0
-            docker tag voting-worker:latest koffimensah/voting-worker:latest:v1.0.0
 
-            docker push koffimensah/voting-vote:latest:v1.0.0
-            docker push koffimensah/voting-result:latest:v1.0.0
-            docker push koffimensah/voting-worker:latest:v1.0.0
-          
+      # 4️⃣ Build local images
+      - name: Build images
+        run: |
+          docker build -t voting-vote:latest ./vote
+          docker build -t voting-worker:latest ./worker
+          docker build -t voting-result:latest ./result
+
+      # 5️⃣ Tag images with Docker Hub username and version
+      - name: Tag images
+        run: |
+          docker tag voting-vote:latest koffimensah/voting-vote:latest
+          docker tag voting-vote:latest koffimensah/voting-vote:v1.0.0
+
+          docker tag voting-worker:latest koffimensah/voting-worker:latest
+          docker tag voting-worker:latest koffimensah/voting-worker:v1.0.0
+
+          docker tag voting-result:latest koffimensah/voting-result:latest
+          docker tag voting-result:latest koffimensah/voting-result:v1.0.0
+
+      # 6️⃣ Push images to Docker Hub
+      - name: Push images
+        run: |
+          docker push koffimensah/voting-vote:latest
+          docker push koffimensah/voting-vote:v1.0.0
+
+          docker push koffimensah/voting-worker:latest
+          docker push koffimensah/voting-worker:v1.0.0
+
+          docker push koffimensah/voting-result:latest
+          docker push koffimensah/voting-result:v1.0.0
+
+      # 7️⃣ Deploy the stack using docker-compose
+      - name: Deploy voting-app stack
+        run: |
+          docker compose pull       # ensure latest images are used
+          docker compose up -d
