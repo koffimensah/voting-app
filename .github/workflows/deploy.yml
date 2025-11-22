@@ -1,4 +1,4 @@
-name: Build and Push voting-app to ECR
+name: Build and Push voting-app to Docker Hub
 
 on:
   push:
@@ -13,39 +13,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Docker and Docker Compose
-        run: |
-          echo "🧱 Updating packages..."
-          sudo apt-get update -y
-
-          echo "🔧 Installing dependencies..."
-          sudo apt-get install -y ca-certificates curl gnupg lsb-release
-          sudo mkdir -p /etc/apt/keyrings
-
-          echo "🔑 Adding Docker’s official GPG key..."
-          curl -fsSL https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg \
-            | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
-
-          echo "📦 Setting up Docker repository..."
-          echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-            https://download.docker.com/linux/$(. /etc/os-release && echo "$ID") \
-            $(lsb_release -cs) stable" \
-            | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-          echo "🚀 Installing Docker Engine and Compose..."
-          sudo apt-get update -y
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-          echo "✅ Docker and Compose versions:"
-          docker --version
-          docker compose version
-
-          echo "🔓 Fixing Docker socket permissions..."
-          sudo chmod 666 /var/run/docker.sock
-
-          echo "🐳 Checking running containers..."
-          docker ps -a
+      - name: Show Docker version
+        run: docker --version
 
       - name: Deploy voting-app stack
         run: |
@@ -58,14 +27,6 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Install Docker CLI (if not available)
-        run: |
-          if ! command -v docker &> /dev/null; then
-            echo "🐳 Installing Docker CLI..."
-            sudo apt-get update -y
-            sudo apt-get install -y docker-ce-cli
-          fi
-
       - name: Login to Docker Hub
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
