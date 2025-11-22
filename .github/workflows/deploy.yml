@@ -1,4 +1,4 @@
-name: Build and Push voting-app to Docker Hub
+name: Deploy voting-app
 
 on:
   push:
@@ -6,24 +6,32 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: ~/voting-app  # <-- set to your repo path on the runner
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Show Docker version
-        run: docker --version
+      - name: Ensure Docker daemon is running
+        run: |
+          if ! docker info &> /dev/null; then
+            echo "Docker daemon is not running. Starting..."
+            sudo nohup dockerd --host=unix:///var/run/docker.sock --containerd=/run/containerd/containerd.sock > ~/dockerd.log 2>&1 &
+            sleep 10
+          fi
+          docker info
 
       - name: Deploy voting-app stack
         run: |
-          echo "🚀 Starting voting-app stack..."
-          docker compose -p votingapp up -d
+          docker compose -f compose.yml -p votingapp up -d
 
   dockerhub-login:
     name: Login to Docker Hub
-    needs: build
+    needs: deploy
     runs-on: self-hosted
 
     steps:
@@ -32,6 +40,5 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          echo "🔐 Logging into Docker Hub..."
           echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
           echo "✅ Successfully logged into Docker Hub!"
